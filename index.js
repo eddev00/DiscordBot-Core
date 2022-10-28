@@ -17,6 +17,7 @@ const client = new Client({
 const { loadEvents } = require("./Handlers/eventHandler");
 
 client.events = new Collection();
+client.commands = new Collection();
 loadEvents(client);
 //Login Bot
 client.login(process.env.TOKEN);
