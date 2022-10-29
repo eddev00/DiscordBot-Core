@@ -15,6 +15,11 @@ const client = new Client({
 });
 
 const { loadEvents } = require("./Handlers/eventHandler");
+const { connect } = require("mongoose");
+
+connect(process.env.DatabaseURL, {}).then(() =>
+  console.log("The client is now connected to the database")
+);
 
 client.events = new Collection();
 client.commands = new Collection();
