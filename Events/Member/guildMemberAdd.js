@@ -1,5 +1,11 @@
-const { EmbedBuilder, WebhookClient, GuildMember } = require("discord.js");
+const {
+  EmbedBuilder,
+  WebhookClient,
+  GuildMember,
+  Embed,
+} = require("discord.js");
 
+const welcomeSchema = require("../../Models/Welcome");
 require("dotenv").config();
 module.exports = {
   name: "guildMemberAdd",
@@ -8,23 +14,35 @@ module.exports = {
    * @param {GuildMember} member
    *
    */
-  execute(member) {
-    const { user, guild } = member;
-    const webhookClient = new WebhookClient({
-      id: process.env.webhookId,
-      token: process.env.webhookToken,
-    });
+  async execute(member) {
+    welcomeSchema.findOne(
+      {
+        Guid: member.guild.id,
+      },
+      async (err, data) => {
+        if (!data) return;
 
-    const embed = new EmbedBuilder()
-      .setAuthor({
-        name: user.tag,
-        iconURL: user.avatarURL({ dynamic: true, size: 512 }),
-      })
-      .setDescription(`Welcome ${member} tp the ${guild.name}**! `)
-      .setTitle("Some Title")
-      .setColor(0x00ffff);
-    webhookClient.send({
-      embeds: [embed],
-    });
+        let channel = data.Channel;
+
+        let Msg = data.Msg || "";
+        let Role = data.Role;
+        const { user, guild } = member;
+        const welcomeChannel = member.guild.channels.cache.get(channel);
+        let webhooks = await welcomeChannel.fetchWebhooks();
+        const myWebHook = webhooks.find((wh) => wh.name === "Welcome"); //FIND WELCOME WEBHOOK
+
+        const welcomeEmber = new EmbedBuilder()
+          .setTitle("**New member!**")
+          .setDescription(Msg)
+          .setColor(0x037821)
+          .addFields({ name: "Total members", value: `${guild.memberCount}` });
+
+        myWebHook.send({
+          //SEND WELCOME MESSAGE USING THE WEBHOOK
+          embeds: [welcomeEmber],
+        });
+        member.roles.add(Role);
+      }
+    );
   },
 };
